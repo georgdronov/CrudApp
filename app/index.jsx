@@ -7,17 +7,33 @@ import {
   FlatList,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useState } from "react";
+import { useState, useContext } from "react";
+import { ThemeContext } from "@/context/ThemeContext";
 import { data } from "../data/todo";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { Inter_500Medium, useFonts } from "@expo-google-fonts/inter";
+import Octicons from "@expo/vector-icons/Octicons";
+import Animated, { LinearTransition } from "react-native-reanimated";
 
 export default function Index() {
   const [todos, setTodos] = useState(data.sort((a, b) => b.id - a.id));
   const [text, setText] = useState("");
 
+  const { colorScheme, toggleColorScheme, theme } = useContext(ThemeContext);
+
+  const [loaded, error] = useFonts({
+    Inter_500Medium,
+  });
+
+  if (!loaded && !error) {
+    return null;
+  }
+
+  const styles = createStyles(theme, colorScheme);
+
   const addTodo = () => {
     if (text.trim()) {
-      const newId = todos.kength > 0 ? todos[0].id + 1 : 1;
+      const newId = todos.length > 0 ? todos[0].id + 1 : 1;
       setTodos([{ id: newId, title: text, completed: false }, ...todos]);
       setText("");
     }
@@ -44,11 +60,7 @@ export default function Index() {
         {item.title}
       </Text>
       <Pressable onPress={() => removeTodo(item.id)}>
-        <MaterialCommunityIcons
-          name="delete-circle"
-          size={36}
-          color="red"
-        />
+        <MaterialCommunityIcons name="delete-circle" size={36} color="red" />
       </Pressable>
     </View>
   );
@@ -60,85 +72,107 @@ export default function Index() {
           placeholder="Add a new todo"
           placeholderTextColor="#666"
           value={text}
-          onChange={setText}
+          onChangeText={setText}
         />
         <Pressable onPress={addTodo} style={styles.addButton}>
           <Text style={styles.addButtonText}>Add</Text>
         </Pressable>
+        <Pressable onPress={toggleColorScheme} style={{ marginLeft: 10 }}>
+          {colorScheme === "dark" ? (
+            <Octicons
+              name="light-bulb"
+              size={36}
+              color={theme.text}
+              selectable={false}
+            />
+          ) : (
+            <Octicons
+              name="moon"
+              size={36}
+              color={theme.text}
+              selectable={false}
+            />
+          )}
+        </Pressable>
       </View>
-      <FlatList
+      <Animated.FlatList
         data={todos}
         renderItem={renderItem}
         keyExtractor={(todo) => todo.id.toString()}
         contentContainerStyle={styles.todoContainer}
+        itemLayoutAnimation={LinearTransition}
+        keyboardDismissMode={"on-drag"}
       />
     </SafeAreaView>
   );
 }
-
-const styles = {
-  container: {
-    flex: 1,
-    backgroundColor: "#121212",
-    padding: 20,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    marginBottom: 20,
-  },
-  input: {
-    flex: 1,
-    height: 40,
-    borderWidth: 1,
-    borderColor: "#333",
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    marginRight: 10,
-    fontSize: 16,
-    backgroundColor: "#1E1E1E",
-    color: "#FFFFFF",
-  },
-  addButton: {
-    backgroundColor: "#4CAF50",
-    borderRadius: 8,
-    padding: 10,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  addButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  todoContainer: {
-    flexGrow: 1,
-  },
-  todoItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#1E1E1E",
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 10,
-  },
-  todoText: {
-    flex: 1,
-    fontSize: 16,
-    color: "#FFFFFF",
-  },
-  completedTodo: {
-    textDecorationLine: "line-through",
-    color: "#666",
-  },
-  deleteButton: {
-    backgroundColor: "#FF3B30",
-    borderRadius: 8,
-    padding: 8,
-    marginLeft: 10,
-  },
-  deleteButtonText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "bold",
-  },
-};
+function createStyles(theme, colorScheme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background,
+      padding: 20,
+    },
+    inputContainer: {
+      flexDirection: "row",
+      marginBottom: 20,
+    },
+    input: {
+      flex: 1,
+      height: 40,
+      borderWidth: 1,
+      borderColor: theme.border,
+      borderRadius: 8,
+      paddingHorizontal: 10,
+      marginRight: 10,
+      fontSize: 16,
+      backgroundColor: theme.surface,
+      color: theme.text,
+      fontFamily: "Inter_500Medium",
+    },
+    addButton: {
+      backgroundColor: theme.primary,
+      borderRadius: 8,
+      padding: 10,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    addButtonText: {
+      color: theme.onPrimary,
+      fontSize: 16,
+      fontWeight: "bold",
+    },
+    todoContainer: {
+      flexGrow: 1,
+    },
+    todoItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: theme.surface,
+      padding: 15,
+      borderRadius: 8,
+      marginBottom: 10,
+    },
+    todoText: {
+      flex: 1,
+      fontSize: 16,
+      color: theme.text,
+      fontFamily: "Inter_500Medium",
+    },
+    completedTodo: {
+      textDecorationLine: "line-through",
+      color: theme.textSecondary,
+    },
+    deleteButton: {
+      backgroundColor: theme.error,
+      borderRadius: 8,
+      padding: 8,
+      marginLeft: 10,
+    },
+    deleteButtonText: {
+      color: theme.onError,
+      fontSize: 14,
+      fontWeight: "bold",
+    },
+  });
+}
