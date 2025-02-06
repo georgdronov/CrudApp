@@ -7,7 +7,7 @@ import {
   FlatList,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { ThemeContext } from "@/context/ThemeContext";
 import { data } from "../data/todo";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
